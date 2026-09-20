@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import Header from "../components/Header.jsx";
 import ChatWindow from "../components/ChatWindow.jsx";
 import MessageInput from "../components/MessageInput.jsx";
+import TaskManager from "../components/TaskManager.jsx";
 import { useChat } from "../hooks/useChat.js";
 import { useSpeechRecognition } from "../hooks/useSpeechRecognition.js";
 
@@ -11,6 +12,7 @@ export default function Home() {
   const { messages, isSending, sendMessage } = useChat();
   const speech = useSpeechRecognition();
   const [isBackendOnline, setIsBackendOnline] = useState(null);
+  const [activeSection, setActiveSection] = useState("chat");
 
   useEffect(() => {
     let cancelled = false;
@@ -34,7 +36,11 @@ export default function Home() {
 
   return (
     <div className="mx-auto flex h-screen max-w-3xl flex-col gap-4 p-4">
-      <Header isBackendOnline={isBackendOnline} />
+      <Header
+        isBackendOnline={isBackendOnline}
+        activeSection={activeSection}
+        onSectionChange={setActiveSection}
+      />
 
       {isBackendOnline === false && (
         <div className="rounded-xl border border-syn-danger/30 bg-syn-danger/10 px-4 py-2.5 text-sm text-syn-danger">
@@ -44,8 +50,14 @@ export default function Home() {
         </div>
       )}
 
-      <ChatWindow messages={messages} isSending={isSending} />
-      <MessageInput onSend={sendMessage} disabled={isSending} speech={speech} />
+      {activeSection === "chat" ? (
+        <>
+          <ChatWindow messages={messages} isSending={isSending} />
+          <MessageInput onSend={sendMessage} disabled={isSending} speech={speech} />
+        </>
+      ) : (
+        <TaskManager />
+      )}
     </div>
   );
 }

@@ -56,6 +56,59 @@ export async function sendChatMessage(message, conversation) {
   return data.response;
 }
 
+async function taskRequest(path, options = {}) {
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers: { "Content-Type": "application/json", ...options.headers },
+    });
+  } catch {
+    throw new ApiError(
+      "Can't reach the SYNTRA backend. Make sure it's running and try again.",
+      0
+    );
+  }
+
+  if (response.status === 204) return null;
+
+  let data = null;
+  try {
+    data = await response.json();
+  } catch {
+    // response body wasn't JSON — fall through to generic error below
+  }
+
+  if (!response.ok) {
+    const detail = extractDetail(data) || `Request failed with status ${response.status}.`;
+    throw new ApiError(detail, response.status);
+  }
+
+  return data;
+}
+
+export function fetchTasks() {
+  return taskRequest("/api/tasks");
+}
+
+export function createTask(task) {
+  return taskRequest("/api/tasks", {
+    method: "POST",
+    body: JSON.stringify(task),
+  });
+}
+
+export function updateTask(taskId, changes) {
+  return taskRequest(`/api/tasks/${taskId}`, {
+    method: "PATCH",
+    body: JSON.stringify(changes),
+  });
+}
+
+export function deleteTask(taskId) {
+  return taskRequest(`/api/tasks/${taskId}`, { method: "DELETE" });
+}
+
 function extractDetail(data) {
   if (!data) return null;
   if (typeof data.detail === "string") return data.detail;

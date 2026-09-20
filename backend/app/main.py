@@ -5,12 +5,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from app.config import get_settings
-from app.routes import chat
+from app.database import Base, engine
+from app import db_models  # noqa: F401 - register SQLAlchemy table models
+from app.routes import chat, tasks
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(name)s: %(message)s")
 logger = logging.getLogger("syntra.main")
 
 settings = get_settings()
+
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="SYNTRA API",
@@ -43,3 +47,4 @@ async def health() -> dict:
 
 
 app.include_router(chat.router)
+app.include_router(tasks.router)
